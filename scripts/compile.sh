@@ -1,13 +1,13 @@
 #!/bin/bash
 
-SDK_DIR=/Users/ViktorL/Library/Android/sdk/build-tools/33.0.2
-
 # Service name:
 # com.company.subcategory.platform
 # ^^^ ^^^^^^^ ^^^^^^^^^^^ ^^^^^^^^
 SERVICE=com.myosrs.oldscape.android
 
-SOURCE_DIRECTORY=/Users/ViktorL/Downloads
+SDK_DIR=~/Library/Android/sdk/build-tools/33.0.2
+
+SOURCE_DIRECTORY=../target
 SOURCE_TARGET="Old School RuneScape_213.2_Apkpure"
 
 export ANDROID_SERIAL=emulator-5554

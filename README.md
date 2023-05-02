@@ -3,8 +3,9 @@
 ## UNDER DEVELOPMENT
 
 ### Goal
-Build a working wrapping for tracking internal game state.
-Currently I'm keeping everything relating to the apk local.
+Build a working wrapping for tracking internal game state. 
+> Currently I'm keeping everything relating to the apk local.
+
 
 ## Tools
 - Java 8/11
@@ -46,7 +47,9 @@ but that took me a while to understand. If one inspect the Android Manifest,
 one could see under `<Application>` `<activity android:configChanges=".." >` 
 that it uses `touchscreen` such that changes to the touchscreen can be
 handled (or intercepted) by the binary (OBS, this is not the same as
-regular). One thing that I still want to explore it that the binary
+regular touch events).
+
+One thing that I still want to explore it that the binary
 still needs to bind the Android NativeActivity class, so if I were to
 inject or override the class, I could potentially intercept all actions
 being made.

@@ -1,1 +1,3 @@
-./target/*
+target/*
+source/*
+.DS_Store
