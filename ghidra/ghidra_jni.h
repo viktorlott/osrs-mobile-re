@@ -1,3 +1,4 @@
+
 typedef long jint;
 typedef __int64 jlong;
 typedef signed char jbyte;
