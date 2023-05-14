@@ -3,4 +3,4 @@ source/*
 apps/*
 tools/LIEF/*
 .DS_Store
-__handlers__/*
+__handlers__

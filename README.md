@@ -2,7 +2,7 @@
 ### UNDER DEVELOPMENT
 
 
-## Goal
+## Goals
 - Learn about RE techniques.
 - Document everything.
 - Build a working wrapping for tracking internal game state. 
@@ -20,18 +20,19 @@
 ## Tools
 | Name           | Description                                          | Required |
 |:---------------|:-----------------------------------------------------|:--------:|
-| Java 8/11      | JDK                                                  |          |
 | Android studio | IDE for android apps                                 |          |
+| Java 8/11      | JDK                                                  |          |
 | apksigner      | Used to sign the recompiled apk                      |    X     |
 | emulator       | The Android emulator that will run the modified apk  |    X     |
-| adb            | Interact with the emulator                           |          |
+| adb            | Interact with the emulator                           |    X     |
 | Ghidra         | Used to decode the binary (Reverse engineering tool) |          |
-| frida-tools    | RE tool for runtime analysis                         |    X     |
-| apktool        | Used for de/re-compilation                           |    X     |
 | jadx           | Used to convert a apk to readable java code          |          |
 | dextools       | Dalvik executable tools                              |          |
 | Hex editor     | Used to edit the binary (I use Hex Fiend on mac)     |          |
-| LIEF           | LIEF                                                 |          |
+| apktool        | Used for de/re-compilation                           |    X     |
+| frida-tools    | RE tool for runtime analysis                         |    X     |
+| LIEF           | Library to instrument executable formats             |          |
+| QBDI           | Dyn bin instrumentation                              |          |
 
 
 ## Disassembling and Decompiling
@@ -134,17 +135,6 @@ human-readable Dalvik bytecode.
 > that the loadLibrary call take place before it loads in the next
 > library.
 
-#### Loading so files
-```smali
-const-string v0, "abc"
-invoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V
-```
-
-### Steps
-1. Download the OSRS apk somewhere (I'm not allowed to link it here)
-2. ... TODO
-
-
 #### Random notes
 The OSRS Android app seems to be developed either as an Android Native c++, Game
 Activity c++ project, or a port from the RS3 NXT engine - meaning that
@@ -155,6 +145,19 @@ wrapper on top of it.
 > added to Game Activity c++ projects (except for the AGDK parts). What I
 > mean is that there's no `stringFromJNI` native method example present in
 > GA, like there is in the Android Native c++ project. 
+#### Loading so files
+Injecting into smali.
+```smali
+const-string v0, "abc"
+invoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V
+```
+or use LIEF to inject the dylib directly into osrs lib binary
+
+### Steps
+1. Download the OSRS apk somewhere (I'm not allowed to link it here)
+2. ... TODO
+
+
 
 
 ## Command examples
@@ -194,6 +197,7 @@ $ adb shell netstat -ln | grep 27042
 Android runtime
   - https://source.android.com/docs/core/runtime/art-ti
   - https://developer.android.com/guide/practices/verifying-apps-art.html
+
 Frida
   - https://frida.re/docs/android/
   - https://codeshare.frida.re/ 
