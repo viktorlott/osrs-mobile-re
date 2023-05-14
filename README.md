@@ -122,7 +122,7 @@ potentially intercept all actions being made. This could either be done
 under compile-time, or during runtime with tools like **frida**. 
 
 
-<img src="/picofart.png" style="height: 200px;" />
+<img src="/picofart.png" style="height: 400px;" />
 
 **TODO subjects**
 Network...
