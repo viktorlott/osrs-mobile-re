@@ -209,3 +209,8 @@ Frida
 LIEF
   - https://lief-project.github.io//doc/latest/
 
+
+  - https://fadeevab.com/frida-gadget-injection-on-android-no-root-2-methods/
+
+QBDI
+   - https://github.com/QBDI/QBDI
