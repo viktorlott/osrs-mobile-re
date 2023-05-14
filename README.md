@@ -1,13 +1,19 @@
 # OSRS Native Android mobile app
-### UNDER DEVELOPMENT
 
+> This is a project that is still under development
+
+This project aims to reverse engineer the OSRS mobile app to build a
+working wrapper for tracking the internal game state. It provides a
+"detailed" learning journey into the world of reverse engineering (RE).
+It's cool to learn fun shit.
 
 ## Goals
-- Learn about RE techniques.
-- Document everything.
-- Build a working wrapping for tracking internal game state. 
+- Explore and learn RE techniques.
+- Maintain thorough documentation of the project.
+- Develop a working wrapper for tracking internal game state.
 
 ## Terminologies
+Familiarity with the following terms is essential for understanding this project:
 - ARM ISA
 - Linux kernel
 - Android OS
@@ -36,7 +42,8 @@
 
 
 ## Disassembling and Decompiling
-This section will be about RE techniques and good practices. 
+In this section, we delve into RE techniques and best practices. Include
+header files from NDK, AGDK, and Android from the following locations:
 - Include header files from NDK, AGDK and Android.
   - *android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include*
   - *android-ndk-r25c/prebuilt/linux-x86_64/include*
@@ -44,8 +51,10 @@ This section will be about RE techniques and good practices.
   - *Java/JavaVirtualMachines/jdk-20.jdk/Contents/Home/include*
 
 ## Formats
-- .a files  - Archive libraries are statically linked
-- .so files - Shared objects are dynamically linked
+- .a files   - Archive libraries are statically linked
+- .so files  - Shared objects are dynamically linked
+- .oat files - Statically compiled odex
+- .dex       - Dalvik executable
 
 ## Project structure
 - source/*.apk    - The apk that will be edited 
@@ -113,6 +122,8 @@ potentially intercept all actions being made. This could either be done
 under compile-time, or during runtime with tools like **frida**. 
 
 
+<img src="/picofart.png" style="height: 200px;" />
+
 **TODO subjects**
 Network...
 Shaders...
@@ -153,12 +164,49 @@ invoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V
 ```
 or use LIEF to inject the dylib directly into osrs lib binary
 
-### Steps
-1. Download the OSRS apk somewhere (I'm not allowed to link it here)
-2. ... TODO
+## Steps to Get Started
 
+1. **Download the OSRS APK:** The first step is to download the OSRS apk
+   file. Due to legal reasons, we can't provide a direct link here, but
+   you can easily find it on the official app store or an APK
+   repository.
 
+2. **Decompile the APK:** Use JADX or apktool to decompile the APK into
+   readable code.
+   ```sh
+   java -jar /path/to/apktool_2.7.0.jar d app.apk -o /path/to/folder
+   ```
 
+3. **Analyze the Decompiled Code:** Explore the decompiled APK to
+   understand its structure and operation. Look for any interesting
+   methods or classes that could be used or modified for your purposes.
+
+4. **Inject Frida Gadget:** Inject the Frida Gadget into the APK. This
+   will allow for runtime analysis and manipulation of the app. Ensure
+   that the gadget is correctly named (prefixed with `lib` and suffixed
+   with `.so`) and that the `loadLibrary` call is made before loading
+   any other libraries.
+
+5. **Recompile the APK:** Once you've made your modifications, recompile
+   the APK with apktool:
+   ```sh
+   java -jar /path/to/apktool_2.7.0.jar b /path/to/folder -o app-changed.apk
+   ```
+
+6. **Sign the APK:** Use apksigner to sign your recompiled APK. This is
+   necessary because Android requires all apps to be digitally signed
+   with a certificate before they can be installed or updated.
+   ```sh
+   apksigner sign --verbose --ks-pass pass:android --ks debug.keystore "app.apk"
+   ```
+
+7. **Install and Run the APK:** Install the signed, recompiled APK on
+   your Android device or emulator. Monitor its operation with adb
+   logcat, and perform any necessary testing or analysis.
+
+8. ????
+
+9. Profit
 
 ## Command examples
 ```sh
@@ -194,6 +242,8 @@ $ adb shell netstat -ln | grep 27042
 
 
 ### Resources
+This project leverages several resources for understanding Android
+runtime, Frida, LIEF, and QBDI. 
 Android runtime
   - https://source.android.com/docs/core/runtime/art-ti
   - https://developer.android.com/guide/practices/verifying-apps-art.html
