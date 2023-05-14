@@ -1,12 +1,13 @@
 # OSRS Native Android mobile app
 ### UNDER DEVELOPMENT
 
+
 ## Goal
 - Learn about RE techniques.
 - Document everything.
 - Build a working wrapping for tracking internal game state. 
 
-### Terminologies
+## Terminologies
 - ARM ISA
 - Linux kernel
 - Android OS
@@ -16,7 +17,7 @@
 - Dalvik Executable (.dex files)
 - ELF and Shared object (.so)
 
-### Tools
+## Tools
 | Name           | Description                                          | Required |
 |:---------------|:-----------------------------------------------------|:--------:|
 | Java 8/11      | JDK                                                  |          |
@@ -30,9 +31,10 @@
 | jadx           | Used to convert a apk to readable java code          |          |
 | dextools       | Dalvik executable tools                              |          |
 | Hex editor     | Used to edit the binary (I use Hex Fiend on mac)     |          |
+| LIEF           | LIEF                                                 |          |
 
 
-### Disassembling and Decompiling
+## Disassembling and Decompiling
 This section will be about RE techniques and good practices. 
 - Include header files from NDK, AGDK and Android.
   - *android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include*
@@ -40,38 +42,112 @@ This section will be about RE techniques and good practices.
   - *android-ndk-r25c/sources*
   - *Java/JavaVirtualMachines/jdk-20.jdk/Contents/Home/include*
 
-### Did you know..
-- **Dalvik/ART** VM uses a register-based architecture (register machine), 
+## Formats
+- .a files  - Archive libraries are statically linked
+- .so files - Shared objects are dynamically linked
+
+## Project structure
+- source/*.apk    - The apk that will be edited 
+- apps/*          - The decompiled apk
+- target/*.apk    - The recompiled apk
+- frida/*         - The frida injection tools
+
+
+## Did you know..
+- Dalvik/ART VM uses a register-based architecture (register machine),
   while JVM uses stack-based architecture (stack machines).
 
-- **ART** (Anroid Runtime) replaced Dalvik VM in Android Lollipop version.
-  - ART uses AOT (Ahead-of-time) compilation
-  - DVM uses JIT (Just-in-time) compilation.
+- ART (Anroid Runtime) replaced Dalvik VM in Android Lollipop version.
+  
+- ART uses AOT (Ahead-of-time) compilation.
+  - It also has a JIT compiler, so the AOT and JIT complement eachother.
+  
+- DVM uses JIT (Just-in-time) compilation.
 
-- Android apps are first compiled into Java bytecode, then into Dalvik bytcode.
+- JIT lets Android dynamically compile an app by interpreting a .dex
+  file and then compiling it into executable code during runtime.
+
+- AOT lets Android statically compile a .dex (into a .oat file), which
+  then can be stored on the device and executed at any time without
+  having to reinterprete and JIT compile it every time the app is
+  launched.
+
+- Profile-guided compilations is a technique that ART can use to
+  increase app performance.
+
+- Android apps are first compiled into Java bytecode, then into Dalvik
+  bytcode.
 
 - The smali format is a human-readable Dex bytecode.
 
-- **JNI** (Java Native Interface) bindings are used by the Dalvik/ART VM to
+- JNI (Java Native Interface) bindings are used by the Dalvik/ART VM to
   call native functions in binaries, and vise versa. 
 
-- **NDK** (Native Development Kit) is a toolkit that allows developers to write native
-  code to interface with Dalvik/ART VM through JNI.
+- NDK (Native Development Kit) is a toolkit that allows developers to
+  write native code to interface with Dalvik/ART VM through JNI.
 
-- **AGDK** (Android Game Development Kit) is a toolkit which contains
+- AGDK (Android Game Development Kit) is a toolkit which contains
   libraries that assists the developer in writing Android games in
   native code. It can also interface with the Dalvik/ART VM because it
   also uses NDK and JNI. Note that it does not always need to use them
   because AGDK contains libraries that can interact independent of JNI.
 
 
-### Formats
-- .a files  - Archive libraries are statically linked
-- .so files - Shared objects are dynamically linked
+## The story so far
+By analysing the .so with **Ghidra**, and attaching the jni.h file to
+the data type manager, I've discover a lot more things about the actual
+binary. For example, it uses the NDK to natively attach it self to the
+touch event listener and then concurrency polls events from the event
+queue, without involving the top java wrapper. I'm pretty new at this,
+but that took me a while to understand. If one inspect the Android
+Manifest, one could see under 
+`<Application>` `<activity android:configChanges=".." >` 
+that it uses `touchscreen` such that changes to the touchscreen can be
+handled (or intercepted) by the binary (OBS, this is not the same as
+regular touch events).
 
-## Things I've discovered.
-The OSRS Android app is developed either as an Android Native c++, Game
-Activity c++ project, or a port from the RS3 NXT engine, meaning that
+One thing that I still want to explore is the Android NativeActivity
+class bindings. If I were to inject or override the class, I could
+potentially intercept all actions being made. This could either be done
+under compile-time, or during runtime with tools like **frida**. 
+
+
+**TODO subjects**
+Network...
+Shaders...
+Protect against .apk tampering...
+DexGuard...
+Debugging...
+
+### Frida
+Using frida with signed apks on jailed android is a bit tricky. We
+cannot just use the regualar old **frida-server** and attach it to the
+process. Instead we need to use the **frida-gadget**. This requires us
+to insert a binary (called a gadget) into the apk (next to the other
+binary), and then call system.loadlibrary in Java. The thing is that our
+disassembled apk doesn't contain any real Java code, it contains dex
+decompiled bytecode that has been translated into smali format,
+human-readable Dalvik bytecode. 
+
+> When inserting the frida-gadget into the apk, make sure the name
+> of the binary is prefixed with `lib` and suffixed in `.so`. Make sure
+> that the loadLibrary call take place before it loads in the next
+> library.
+
+#### Loading so files
+```smali
+const-string v0, "abc"
+invoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V
+```
+
+### Steps
+1. Download the OSRS apk somewhere (I'm not allowed to link it here)
+2. ... TODO
+
+
+#### Random notes
+The OSRS Android app seems to be developed either as an Android Native c++, Game
+Activity c++ project, or a port from the RS3 NXT engine - meaning that
 they might have ported the game engine and then added a android native
 wrapper on top of it. 
 
@@ -80,34 +156,6 @@ wrapper on top of it.
 > mean is that there's no `stringFromJNI` native method example present in
 > GA, like there is in the Android Native c++ project. 
 
-#### The story so far
-By analysing the .so with **Ghidra**, and attaching the jni.h file to the
-data type manager, I've discover a lot more things about the actual
-binary. For example, it uses the NDK to natively attach it self to the
-touch event listener and then concurrenly polls events from the event
-queue, without involving the top java wrapper. I'm pretty new at this, 
-but that took me a while to understand. If one inspect the Android Manifest,
-one could see under `<Application>` `<activity android:configChanges=".." >` 
-that it uses `touchscreen` such that changes to the touchscreen can be
-handled (or intercepted) by the binary (OBS, this is not the same as
-regular touch events).
-
-One thing that I still want to explore is the Android NativeActivity class bindings.
-If I were to inject or override the class, I could potentially intercept all actions
-being made. This could either be done under compile-time, or during runtime with tools
-like **frida**. 
-
-Network... (TODO)
-
-Shaders... (TODO)
-
-> The GL shader definitions are for sure present in the binary.
-
-## Steps
-1. Download the OSRS apk somewhere (I'm not allowed to link it here)
-2. 
-
-  
 
 ## Command examples
 ```sh
@@ -124,22 +172,36 @@ $ find /Library -name jni.h
 # Terminal adb loggin
 $ adb logcat | logcat-colorize
 
-# Frida
+# Frida (-U is the default usb device)
 $ frida-trace -U -i "Java_*" 8425
-$ frida-ps -U
+$ frida-ps -U # ps but for android processes
+
+# Creating keystore
+$ keytool -genkey -v -keystore custom.keystore -alias mykeyaliasname -keyalg RSA -keysize 2048 -validity 10000
+
+# Sign recompiled apks
+$ apksigner sign --verbose --ks-pass pass:android --ks debug.keystore "app.apk"
+$ apksigner verify --verbose "app.apk"
+
+$ java -jar ~/Downloads/apktool_2.7.0.jar d ./source/Old\ School\ RuneScape_213.2_Apkpure_original.apk -o ./apps/osrs-app
+$ java -jar ~/Downloads/apktool_2.7.0.jar b ./apps/osrs-app -o ./target/osrs.apk
+
+$ adb shell netstat -ln | grep 27042
 ```
 
 
-### Structure
-- source/app.apk        - The apk that will be edited 
-- apps/*                - The decompiled apk
-- target/app-edited.apk - The recompiled apk
-
-
-
-
-# Resources
+### Resources
 Android runtime
   - https://source.android.com/docs/core/runtime/art-ti
   - https://developer.android.com/guide/practices/verifying-apps-art.html
+Frida
+  - https://frida.re/docs/android/
+  - https://codeshare.frida.re/ 
+  - Frida-gadget
+    - https://frida.re/docs/gadget/
+    - https://koz.io/using-frida-on-android-without-root/
+    - https://lief-project.github.io/doc/latest/tutorials/09_frida_lief.html#id9
+
+LIEF
+  - https://lief-project.github.io//doc/latest/
 

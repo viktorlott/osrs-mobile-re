@@ -1,3 +1,6 @@
 target/*
 source/*
+apps/*
+tools/LIEF/*
 .DS_Store
+__handlers__/*
